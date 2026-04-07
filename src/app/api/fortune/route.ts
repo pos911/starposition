@@ -17,13 +17,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, birthdate, birthtime } = parsed.data;
+    const { name, birthdate, birthtime, gender } = parsed.data;
 
     // Rate limiting: 간단한 IP 기반 체크 (프로덕션에서는 Upstash Redis 사용 권장)
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    console.log(`[운세 요청] IP: ${ip}, 이름: ${name.slice(0,1)}***, 생년월일: ${birthdate.slice(0,4)}****, 시간: ${birthtime || '미입력'}`);
+    console.log(`[운세 요청] IP: ${ip}, 이름: ${name.slice(0,1)}***, 성별: ${gender}, 생년월일: ${birthdate.slice(0,4)}****, 시간: ${birthtime || '미입력'}`);
 
-    const fortune = await generateFortune(name, birthdate, birthtime);
+    const fortune = await generateFortune(name, gender, birthdate, birthtime);
 
     return NextResponse.json({ fortune }, {
       headers: {

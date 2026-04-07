@@ -312,10 +312,11 @@ function StarIcon() {
 export default function HomePage() {
   const [step, setStep] = useState<'input' | 'loading' | 'result'>('input');
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('female');
   const [birthdate, setbirthdate] = useState('');
   const [birthtime, setBirthtime] = useState('');
   const [fortune, setFortune] = useState<FortuneResponse | null>(null);
-  const [errors, setErrors] = useState<{ name?: string; birthdate?: string; birthtime?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; gender?: string; birthdate?: string; birthtime?: string }>({});
   const [serverError, setServerError] = useState('');
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -360,7 +361,7 @@ export default function HomePage() {
       const res = await fetch('/api/fortune', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), birthdate, birthtime }),
+        body: JSON.stringify({ name: name.trim(), gender, birthdate, birthtime }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -419,17 +420,35 @@ export default function HomePage() {
               ) : (
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.formGroup}>
-                    <label className="label" htmlFor="name-input">이름</label>
-                    <input
-                      id="name-input"
-                      type="text"
-                      className={`input-field ${errors.name ? styles.inputError : ''}`}
-                      placeholder="예: 김지연"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      maxLength={20}
-                      autoComplete="off"
-                    />
+                    <label className="label" htmlFor="name-input">이름 및 성별</label>
+                    <div className={styles.nameRow}>
+                      <input
+                        id="name-input"
+                        type="text"
+                        className={`input-field ${errors.name ? styles.inputError : ''} ${styles.nameInput}`}
+                        placeholder="예: 김지연"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        maxLength={20}
+                        autoComplete="off"
+                      />
+                      <div className={styles.genderToggle}>
+                        <button
+                          type="button"
+                          className={`${styles.genderBtn} ${gender === 'female' ? styles.active : ''}`}
+                          onClick={() => setGender('female')}
+                        >
+                          여성
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.genderBtn} ${gender === 'male' ? styles.active : ''}`}
+                          onClick={() => setGender('male')}
+                        >
+                          남성
+                        </button>
+                      </div>
+                    </div>
                     {errors.name && <p className={styles.errorMsg}>{errors.name}</p>}
                   </div>
 

@@ -9,6 +9,9 @@ export const fortuneInputSchema = z.object({
     .min(1, '이름을 입력해주세요')
     .max(20, '이름은 20자 이내로 입력해주세요')
     .regex(/^[가-힣a-zA-Z\s]+$/, '올바른 이름을 입력해주세요'),
+  gender: z.enum(['male', 'female'], {
+    message: '성별을 선택해주세요',
+  }),
   birthdate: z
     .string()
     .regex(/^\d{8}$/, '생년월일 8자리를 입력해주세요 (예: 19920315)')

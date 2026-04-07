@@ -107,6 +107,53 @@
   flex-direction: column;
 }
 
+.nameRow {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.nameInput {
+  flex: 1;
+}
+
+.genderToggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.genderBtn {
+  flex: 1;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.genderBtn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.genderBtn.active {
+  background: var(--gradient-aurora);
+  color: white;
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+}
+
 .inputError {
   border-color: #FB7185 !important;
   box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.2) !important;
