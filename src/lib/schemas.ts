@@ -28,6 +28,7 @@ export const fortuneInputSchema = z.object({
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '시간 형식이 올바르지 않습니다 (예: 14:30)')
     .optional()
     .or(z.literal('')),
+  user_concern: z.string().max(300, '고민은 300자 이내로 작성해주세요').optional(),
 });
 
 export type FortuneInput = z.infer<typeof fortuneInputSchema>;
@@ -37,6 +38,8 @@ export type FortuneInput = z.infer<typeof fortuneInputSchema>;
  */
 export const fortuneResponseSchema = z.object({
   daily_score: z.number().min(0).max(100),
+  overall_score: z.number().min(0).max(100),
+  consultation_result: z.string(),
   one_liner: z.string(),
   caution_points: z.array(z.string()).min(1).max(3),
   lucky_color: z.string(),

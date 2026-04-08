@@ -189,6 +189,13 @@
   color: var(--text-muted);
 }
 
+
+.textareaField {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
 /* ─── Features Grid ─────────────────────────────────────────────── */
 .featuresGrid {
   display: flex;
@@ -201,6 +208,8 @@
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .featureIcon {
@@ -369,6 +378,53 @@
   font-size: 15px;
   line-height: 1.8;
   color: var(--text-primary);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Consultation Card */
+.consultationCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.consultationHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.consultationIcon {
+  font-size: 20px;
+}
+
+.consultationTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Gowun Batang', serif;
+}
+
+.overallScoreBadge {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
+  color: var(--accent-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.consultationText {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* Lucky Grid */
@@ -580,4 +636,46 @@
   font-size: 11px;
   margin-top: 4px;
   opacity: 0.7;
+}
+
+/* ─── Mobile Optimization (iPhone Mini 375px & below) ────────────────── */
+@media (max-width: 380px) {
+  .heroTitle {
+    font-size: 28px;
+  }
+  .inputCard, .scoreCard, .consultationCard, .cautionCard, .tabCard {
+    padding: 16px;
+  }
+  .scoreCard {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .gaugeContainer {
+    width: 100px;
+    height: 100px;
+  }
+  .luckyGrid {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .timeGrid {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .luckyItem, .luckyItemFull, .timeCard {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .oneLiner, .consultationText, .tabText, .cautionItem {
+    font-size: 13px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .main {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

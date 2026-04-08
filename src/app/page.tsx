@@ -157,6 +157,20 @@ function ResultDashboard({ fortune, name }: { fortune: FortuneResponse; name: st
         </div>
       </div>
 
+      {/* 마담 엘라의 심층 상담 */}
+      {fortune.consultation_result && (
+        <div className={`card ${styles.consultationCard}`}>
+          <div className={styles.consultationHeader}>
+            <span className={styles.consultationIcon}>🔮</span>
+            <span className={styles.consultationTitle}>마담 엘라의 심층 상담</span>
+            <div className={styles.overallScoreBadge}>에너지: {fortune.overall_score}점</div>
+          </div>
+          <p className={styles.consultationText}>
+            {fortune.consultation_result}
+          </p>
+        </div>
+      )}
+
       {/* 행운 아이템 그리드 */}
       <div className={styles.luckyGrid}>
         <div className={`card ${styles.luckyItem}`}>
@@ -315,8 +329,9 @@ export default function HomePage() {
   const [gender, setGender] = useState<'male' | 'female'>('female');
   const [birthdate, setbirthdate] = useState('');
   const [birthtime, setBirthtime] = useState('');
+  const [userConcern, setUserConcern] = useState('');
   const [fortune, setFortune] = useState<FortuneResponse | null>(null);
-  const [errors, setErrors] = useState<{ name?: string; gender?: string; birthdate?: string; birthtime?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; gender?: string; birthdate?: string; birthtime?: string; userConcern?: string }>({});
   const [serverError, setServerError] = useState('');
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -346,6 +361,10 @@ export default function HomePage() {
       newErrors.birthtime = '올바른 시간 형식으로 입력해주세요 (예: 14:30)';
     }
 
+    if (userConcern && userConcern.length > 300) {
+      newErrors.userConcern = '고민은 300자 이내로 작성해주세요';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -361,7 +380,7 @@ export default function HomePage() {
       const res = await fetch('/api/fortune', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), gender, birthdate, birthtime }),
+        body: JSON.stringify({ name: name.trim(), gender, birthdate, birthtime, user_concern: userConcern.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -478,6 +497,20 @@ export default function HomePage() {
                     />
                     {errors.birthtime && <p className={styles.errorMsg}>{errors.birthtime}</p>}
                     <p className={styles.inputHint}>정확한 출생각 조언을 위해 시간을 입력해주세요</p>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className="label" htmlFor="concern-input">요즘 어떤 고민이 있으신가요? (선택사항)</label>
+                    <textarea
+                      id="concern-input"
+                      className={`input-field ${styles.textareaField} ${errors.userConcern ? styles.inputError : ''}`}
+                      placeholder="예: 이직, 연애, 인간관계 등 구체적일수록 좋아요"
+                      value={userConcern}
+                      onChange={e => setUserConcern(e.target.value)}
+                      maxLength={300}
+                    />
+                    {errors.userConcern && <p className={styles.errorMsg}>{errors.userConcern}</p>}
+                    <p className={styles.inputHint}>{userConcern.length}/300자</p>
                   </div>
 
                   {serverError && (

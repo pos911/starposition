@@ -20,7 +20,7 @@ const SYSTEM_INSTRUCTION = `당신은 서울에서 20년간 활동 중인 현대
 
 응답은 반드시 아래 JSON 형식을 정확히 지켜주세요. 추가 텍스트 없이 JSON만 반환하세요.`;
 
-function buildFortunePrompt(name: string, gender: 'male' | 'female', birthdate: string, birthtime?: string): string {
+function buildFortunePrompt(name: string, gender: 'male' | 'female', birthdate: string, birthtime?: string, userConcern?: string): string {
   const kstDate = getKSTDateString();
   const parsed = parseBirthDate(birthdate);
   const age = 2026 - parsed.year;
@@ -35,10 +35,16 @@ function buildFortunePrompt(name: string, gender: 'male' | 'female', birthdate: 
 ${parsed.chineseZodiac}
 
 ${birthtime ? `출생 시각 ${birthtime}을 바탕으로 상승궁(Ascendant)과 달의 위치를 추론하여 더 정밀한 분석을 제공해주세요.` : ''}
-${genderKr}의 삶인 커리어, 재테크, 인간관계, 라이프스타일 맥락에서 분석하고, 2026년 트렌드를 반영하여 아래 JSON으로 응답해주세요:
+
+요즘 ${name}님의 주요 고민: ${userConcern ? `"${userConcern}"` : '특별한 고민 없음'}
+
+사용자의 성별(${genderKr}), 나이(${age}세), 별자리(${parsed.zodiac}), 입력된 고민을 바탕으로 '따뜻한 공감 -> 운세 기반의 분석 -> 실질적인 행동 지침' 순서로 답변을 제공해주세요.
+2026년 트렌드를 반영하여 아래 JSON으로 응답해주세요:
 
 {
   "daily_score": (0-100 사이 정수, 오늘의 총 운세 점수),
+  "overall_score": (0-100 사이 정수, 고민의 해결 가능성이나 오늘의 에너지 수준을 반영한 점수),
+  "consultation_result": (고민에 대한 공감과 운세적 해석 및 실질적인 행동 지침이 섞인 4-5문장의 따뜻한 상담 텍스트),
   "one_liner": (마음을 사로잡는 한 줄 오늘의 운세 문구, 신비롭고 가슴을 울리게),
   "caution_points": [(오늘 조심해야 할 행동 패턴 1), (조심해야 할 행동 패턴 2), (조심해야 할 행동 패턴 3)],
   "lucky_color": (2026 트렌드를 반영한 행운의 색상 이름, 한국어),
@@ -56,14 +62,14 @@ ${genderKr}의 삶인 커리어, 재테크, 인간관계, 라이프스타일 맥
 }`;
 }
 
-export async function generateFortune(name: string, gender: 'male' | 'female', birthdate: string, birthtime?: string): Promise<FortuneResponse> {
+export async function generateFortune(name: string, gender: 'male' | 'female', birthdate: string, birthtime?: string, userConcern?: string): Promise<FortuneResponse> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
   }
 
   const response = await client.models.generateContent({
     model: 'gemini-2.0-flash',
-    contents: [{ role: 'user', parts: [{ text: buildFortunePrompt(name, gender, birthdate, birthtime) }] }],
+    contents: [{ role: 'user', parts: [{ text: buildFortunePrompt(name, gender, birthdate, birthtime, userConcern) }] }],
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: 'application/json',
@@ -88,6 +94,8 @@ export async function generateFortune(name: string, gender: 'male' | 'female', b
     const raw = parsed as Record<string, unknown>;
     return {
       daily_score: typeof raw.daily_score === 'number' ? raw.daily_score : 75,
+      overall_score: typeof raw.overall_score === 'number' ? raw.overall_score : 80,
+      consultation_result: typeof raw.consultation_result === 'string' ? raw.consultation_result : '당신의 고민에 깊이 공감합니다. 우주의 흐름이 당신을 돕고 있으니, 자신을 믿고 한 걸음씩 나아가세요. 좋은 결과가 있을 것입니다.',
       one_liner: typeof raw.one_liner === 'string' ? raw.one_liner : '오늘은 별들이 당신에게 미소 짓고 있어요.',
       caution_points: Array.isArray(raw.caution_points) ? raw.caution_points as string[] : ['감정적인 결정 주의'],
       lucky_color: typeof raw.lucky_color === 'string' ? raw.lucky_color : '아이시 블루',
