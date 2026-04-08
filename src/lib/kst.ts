@@ -50,8 +50,8 @@ export function parseBirthDate(yyyymmdd: string): {
   const day = parseInt(yyyymmdd.slice(6, 8));
 
   const zodiac = getZodiacSign(month, day);
-  const element = getChineseElement(year);
-  const chineseZodiac = getChineseZodiac(year);
+  const element = getChineseElement(year, month, day);
+  const chineseZodiac = getChineseZodiac(year, month, day);
 
   return { year, month, day, zodiac, element, chineseZodiac };
 }
@@ -86,12 +86,20 @@ function getZodiacSign(month: number, day: number): string {
   return '염소자리';
 }
 
-function getChineseElement(year: number): string {
-  const elements = ['금', '금', '수', '수', '목', '목', '화', '화', '토', '토'];
+function getChineseElement(year: number, month: number, day: number): string {
+  // 간단한 절기(입춘) 보정: 대략 2월 3일 이전은 해가 안 바뀐 것으로 간주 (음력/절기 기준)
+  if (month === 1 || (month === 2 && day <= 3)) {
+    year -= 1;
+  }
+  const elements = ['목', '목', '화', '화', '토', '토', '금', '금', '수', '수'];
   return elements[(year - 4) % 10] + '(오행)';
 }
 
-function getChineseZodiac(year: number): string {
-  const animals = ['원숭이', '닭', '개', '돼지', '쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양'];
+function getChineseZodiac(year: number, month: number, day: number): string {
+  // 간단한 절기(입춘) 보정
+  if (month === 1 || (month === 2 && day <= 3)) {
+    year -= 1;
+  }
+  const animals = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
   return animals[(year - 4) % 12] + '띠';
 }
