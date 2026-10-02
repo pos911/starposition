@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { FortuneResponse } from '@/lib/schemas';
+import { trackEvent } from '@/lib/analytics';
 import styles from './page.module.css';
 
 // ─── 별자리 아이콘 ───────────────────────────────────────────
@@ -237,7 +238,10 @@ function ResultDashboard({ fortune, name }: { fortune: FortuneResponse; name: st
             <button
               key={tab.key}
               className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                trackEvent('tab_view', { tab: tab.key });
+              }}
             >
               {tab.emoji} {tab.label}
             </button>
@@ -259,12 +263,24 @@ function ResultDashboard({ fortune, name }: { fortune: FortuneResponse; name: st
 function ShareButton({ fortune, name }: { fortune: FortuneResponse; name: string }) {
   const handleShare = async () => {
     const text = `✨ ${name}님의 오늘 운세\n\n🌟 행운 점수: ${fortune.daily_score}점\n💬 "${fortune.one_liner}"\n🎨 행운의 색상: ${fortune.lucky_color}\n🍀 행운의 숫자: ${fortune.lucky_number}\n\n별자리 운세 앱에서 나의 운세 보기 →`;
-    
-    if (navigator.share) {
-      await navigator.share({ title: '오늘의 별자리 운세', text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert('운세 결과가 클립보드에 복사되었어요! 💫');
+
+    trackEvent('share_attempt', {
+      method: navigator.share ? 'native' : 'clipboard',
+    });
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: '오늘의 별자리 운세', text });
+        trackEvent('share_success', { method: 'native' });
+      } else {
+        await navigator.clipboard.writeText(text);
+        trackEvent('share_fallback', { method: 'clipboard' });
+        alert('운세 결과가 클립보드에 복사되었어요! 💫');
+      }
+    } catch (error) {
+      trackEvent('share_error', {
+        reason: error instanceof DOMException && error.name === 'AbortError' ? 'cancelled' : 'failed',
+      });
     }
   };
 
@@ -375,6 +391,10 @@ export default function HomePage() {
 
     setServerError('');
     setStep('loading');
+    trackEvent('fortune_start', {
+      hasBirthTime: Boolean(birthtime),
+      hasConcern: Boolean(userConcern.trim()),
+    });
 
     try {
       const res = await fetch('/api/fortune', {
@@ -388,13 +408,16 @@ export default function HomePage() {
       }
       setFortune(data.fortune);
       setStep('result');
+      trackEvent('fortune_success');
     } catch (err) {
       setServerError(err instanceof Error ? err.message : '오류가 발생했습니다.');
       setStep('input');
+      trackEvent('fortune_error', { reason: 'api_or_network' });
     }
   }
 
   function handleRetry() {
+    trackEvent('fortune_retry');
     setStep('input');
     setFortune(null);
     setServerError('');
