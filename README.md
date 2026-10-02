@@ -72,3 +72,28 @@ src/
 - 클라이언트 코드에 절대 노출 안 됨
 - 사용자 생년월일은 운세 생성 후 즉시 폐기
 - Zod로 모든 입력값 서버 검증
+
+
+## 📈 방문자 분석
+
+사이트는 개인정보를 최소화한 1st-party 이벤트 분석을 지원합니다.
+
+- 최초 방문 및 페이지 종료 이벤트
+- 익명 visitor/session ID
+- UTM / referrer
+- Vercel GeoIP 헤더 기반 국가·지역·도시·시간대
+- IP는 원문을 저장하지 않고 IPv4 /24, IPv6 /64 단위로 마스킹
+- 브라우저/OS/기기 유형, 화면 크기
+- 운세 생성 시작/성공/오류, 결과 탭, 공유 이벤트
+- 이름·생년월일·고민 내용은 Analytics 이벤트에 포함하지 않음
+- 브라우저의 Do Not Track 또는 Global Privacy Control이 활성화되어 있으면 클라이언트 이벤트를 전송하지 않음
+
+기본 저장 대상은 Vercel Runtime Logs의 `[analytics]` 구조화 로그입니다.
+외부 분석 저장소로 전달하려면 Vercel 환경 변수에 아래를 설정합니다.
+
+```
+ANALYTICS_WEBHOOK_URL=https://example.com/analytics
+ANALYTICS_WEBHOOK_TOKEN=optional-bearer-token
+```
+
+`ANALYTICS_WEBHOOK_URL`이 설정되면 동일한 구조화 이벤트를 해당 HTTPS 엔드포인트로 전달합니다.
