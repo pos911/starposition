@@ -1,8 +1,64 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { getKSTDateString, parseBirthDate } from './kst';
 import { fortuneResponseSchema, type FortuneResponse } from './schemas';
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const GEMINI_MODEL = 'gemini-3.8-flash';
+
+function getGeminiClient() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY_MISSING');
+  }
+  return new GoogleGenAI({ apiKey });
+}
+
+const FORTUNE_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'daily_score',
+    'overall_score',
+    'consultation_result',
+    'one_liner',
+    'caution_points',
+    'lucky_color',
+    'lucky_color_hex',
+    'lucky_item',
+    'career_advice',
+    'love_fortune',
+    'money_fortune',
+    'health_tip',
+    'ootd_suggestion',
+    'best_time',
+    'avoid_time',
+    'lucky_number',
+    'mood_keyword',
+  ],
+  properties: {
+    daily_score: { type: 'integer', minimum: 0, maximum: 100 },
+    overall_score: { type: 'integer', minimum: 0, maximum: 100 },
+    consultation_result: { type: 'string' },
+    one_liner: { type: 'string' },
+    caution_points: {
+      type: 'array',
+      minItems: 3,
+      maxItems: 3,
+      items: { type: 'string' },
+    },
+    lucky_color: { type: 'string' },
+    lucky_color_hex: { type: 'string' },
+    lucky_item: { type: 'string' },
+    career_advice: { type: 'string' },
+    love_fortune: { type: 'string' },
+    money_fortune: { type: 'string' },
+    health_tip: { type: 'string' },
+    ootd_suggestion: { type: 'string' },
+    best_time: { type: 'string' },
+    avoid_time: { type: 'string' },
+    lucky_number: { type: 'integer', minimum: 1, maximum: 99 },
+    mood_keyword: { type: 'string' },
+  },
+} as const;
 
 const SYSTEM_INSTRUCTION = `당신은 서울에서 20년간 활동 중인 현대적인 맞춤형 점성술사입니다. 특히 대한민국 30대 여성(또는 남성)의 커리어, 재테크, 라이프스타일 심리 분석에 정통합니다.
 
@@ -63,29 +119,35 @@ ${birthtime ? `출생 시각 ${birthtime}을 바탕으로 상승궁(Ascendant)�
 }
 
 export async function generateFortune(name: string, gender: 'male' | 'female', birthdate: string, birthtime?: string, userConcern?: string): Promise<FortuneResponse> {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
-  }
+  const client = getGeminiClient();
 
   const response = await client.models.generateContent({
-    model: 'gemini-3.6-flash',
+    model: GEMINI_MODEL,
     contents: [{ role: 'user', parts: [{ text: buildFortunePrompt(name, gender, birthdate, birthtime, userConcern) }] }],
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: 'application/json',
-      temperature: 0.85,
-      maxOutputTokens: 1500,
+      responseJsonSchema: FORTUNE_RESPONSE_JSON_SCHEMA,
+      thinkingConfig: {
+        thinkingLevel: ThinkingLevel.LOW,
+      },
+      maxOutputTokens: 8192,
     },
   });
 
-  const text = response.text ?? '';
+  const text = response.text?.trim() ?? '';
+  const finishReason = response.candidates?.[0]?.finishReason ?? 'UNKNOWN';
+
+  if (!text) {
+    throw new Error(`AI_EMPTY_RESPONSE:${finishReason}`);
+  }
   let parsed: unknown;
   try {
     // JSON 코드블록 제거
     const clean = text.replace(/```json\s*/g, '').replace(/```/g, '').trim();
     parsed = JSON.parse(clean);
   } catch {
-    throw new Error('AI 응답 파싱 실패');
+    throw new Error(`AI_RESPONSE_PARSE_FAILED:${finishReason}`);
   }
 
   const validated = fortuneResponseSchema.safeParse(parsed);

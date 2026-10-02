@@ -33,9 +33,50 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('[운세 생성 오류]', error);
+    const err = error as {
+      name?: string;
+      message?: string;
+      status?: number;
+      code?: number | string;
+    };
+
+    console.error('[fortune] generation failed', {
+      name: err?.name ?? 'UnknownError',
+      message: (err?.message ?? 'unknown').slice(0, 500),
+      status: err?.status,
+      code: err?.code,
+      model: 'gemini-3.8-flash',
+    });
+
+    const upstreamStatus =
+      typeof err?.status === 'number'
+        ? err.status
+        : typeof err?.code === 'number'
+          ? err.code
+          : undefined;
+
+    const errorCode =
+      err?.message === 'GEMINI_API_KEY_MISSING'
+        ? 'AI_CONFIG'
+        : upstreamStatus === 401 || upstreamStatus === 403
+          ? 'AI_AUTH'
+          : upstreamStatus === 404
+            ? 'AI_MODEL'
+            : upstreamStatus === 429
+              ? 'AI_QUOTA'
+              : upstreamStatus && upstreamStatus >= 500
+                ? 'AI_UPSTREAM'
+                : err?.message?.startsWith('AI_EMPTY_RESPONSE')
+                  ? 'AI_EMPTY'
+                  : err?.message?.startsWith('AI_RESPONSE_PARSE_FAILED')
+                    ? 'AI_PARSE'
+                    : 'AI_REQUEST';
+
     return NextResponse.json(
-      { error: '맞춤형 점성술사가 잠시 자리를 비웠어요. 잠시 후 다시 시도해주세요.' },
+      {
+        error: '맞춤형 점성술사가 잠시 자리를 비웠어요. 잠시 후 다시 시도해주세요.',
+        errorCode,
+      },
       { status: 500 }
     );
   }
