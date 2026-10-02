@@ -263,14 +263,15 @@ function ResultDashboard({ fortune, name }: { fortune: FortuneResponse; name: st
 function ShareButton({ fortune, name }: { fortune: FortuneResponse; name: string }) {
   const handleShare = async () => {
     const text = `✨ ${name}님의 오늘 운세\n\n🌟 행운 점수: ${fortune.daily_score}점\n💬 "${fortune.one_liner}"\n🎨 행운의 색상: ${fortune.lucky_color}\n🍀 행운의 숫자: ${fortune.lucky_number}\n\n별자리 운세 앱에서 나의 운세 보기 →`;
+    const nativeShare = (navigator as { share?: Navigator['share'] }).share;
 
     trackEvent('share_attempt', {
-      method: navigator.share ? 'native' : 'clipboard',
+      method: nativeShare ? 'native' : 'clipboard',
     });
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title: '오늘의 별자리 운세', text });
+      if (nativeShare) {
+        await nativeShare.call(navigator, { title: '오늘의 별자리 운세', text });
         trackEvent('share_success', { method: 'native' });
       } else {
         await navigator.clipboard.writeText(text);
