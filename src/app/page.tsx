@@ -405,7 +405,8 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? '알 수 없는 오류가 발생했습니다.');
+        const code = typeof data.errorCode === 'string' ? ` [${data.errorCode}]` : '';
+        throw new Error(`${data.error ?? '알 수 없는 오류가 발생했습니다.'}${code}`);
       }
       setFortune(data.fortune);
       setStep('result');
