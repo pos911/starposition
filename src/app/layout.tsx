@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import AnalyticsTracker from './analytics-tracker'
 
 export const metadata: Metadata = {
   title: '별자리 운세 ✨ — AI 점성술사의 오늘 이야기',
@@ -31,7 +32,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AnalyticsTracker />
+      </body>
     </html>
   )
 }

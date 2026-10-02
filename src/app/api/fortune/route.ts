@@ -19,9 +19,11 @@ export async function POST(request: NextRequest) {
 
     const { name, birthdate, birthtime, gender, user_concern } = parsed.data;
 
-    // Rate limiting: 간단한 IP 기반 체크 (프로덕션에서는 Upstash Redis 사용 권장)
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    console.log(`[운세 요청] IP: ${ip}, 이름: ${name.slice(0,1)}***, 성별: ${gender}, 생년월일: ${birthdate.slice(0,4)}****, 시간: ${birthtime || '미입력'}, 고민: ${user_concern ? '있음' : '없음'}`);
+    // 운세 입력값은 생성 목적에만 사용하며 분석 로그와 결합하지 않는다.
+    console.log('[fortune] request accepted', {
+      hasBirthTime: Boolean(birthtime),
+      hasConcern: Boolean(user_concern),
+    });
 
     const fortune = await generateFortune(name, gender, birthdate, birthtime, user_concern);
 
